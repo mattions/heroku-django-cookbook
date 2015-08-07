@@ -32,65 +32,21 @@ a separate fork of Heroku's buildpack.
 The only thing you need to do is to create a proper `bin/post_compile` bash
 script in the root directory of your application.
 
-The [bin](https://github.com/nigma/heroku-django-cookbook/tree/master/bin) and
-[.heroku](https://github.com/nigma/heroku-django-cookbook/tree/master/.heroku) directories
-contain a set of scripts that can be used to install NodeJS/Less and invoke
-`manage.py collectstatic` and `manage.py compress` commands in your Django application:
+This is a FORK of https://github.com/nigma/heroku-django-cookbook to support 
+django-pipeline instead of django-compressor.
 
-- [bin/post_compile](https://github.com/nigma/heroku-django-cookbook/tree/master/bin/post_compile)
-- [bin/install_nodejs](https://github.com/nigma/heroku-django-cookbook/tree/master/bin/install_nodejs)
-- [bin/install_less](https://github.com/nigma/heroku-django-cookbook/tree/master/bin/install_less)
-- [bin/run_collectstatic](https://github.com/nigma/heroku-django-cookbook/tree/master/bin/run_collectstatic)
-- [bin/run_compress](https://github.com/nigma/heroku-django-cookbook/tree/master/bin/run_compress)
-- [.heroku/collectstatic_disabled](https://github.com/nigma/heroku-django-cookbook/tree/master/.heroku/collectstatic_disabled)
+It updates npm, install uglifyjs and cssmin
 
-Just copy them over to your app reposiory and have your Less stylesheets
-compiled with an assets compressor like
-[Django Compressor](https://github.com/jezdez/django_compressor).
+- `bin/post_compile` : Main script that gets called by the buildpack
+- `bin/install_nodejs` : install nodejs (needed to manage bower and friends)
+- `bin/install_less` : Install lss via node
+- `bin/run_collectstatic`: Runs collect static. Compression happens here with django-pipeline
+- `bin/install_bower` : Installs bower to manage all the dependencies
+- `bin/install_cssmin` : CSS Minifier of choice
+- `bin/install_uglifyjs` : JS Minifier of choice
+- `.heroku/collectstatic_disabled` : Needed to avoid heroku re-running the collect static
 
 Note: the empty ``/.heroku/collectstatic_disabled`` file deactivates the default collectstatic
 build step that is part of the Heroku's buildpack. This will prevent the build script from doing
 unnecessary work that is already handled by the above scripts.
 
-A note on hosting static files on Amazon S3. Remember to enable the
-[environment variables](https://devcenter.heroku.com/articles/django-assets#config-vars-during-build)
-if you are using django-storages and uploading static assets to S3:
-
-`heroku labs:enable user-env-compile`
-
-
-Automatic Django configuration and utilities for Heroku
--------------------------------------------------------
-
-[django-herokuify](https://github.com/nigma/django-herokuify) is a Django settings helper
-that makes is very easy to configure database, cache, storage, email and other
-common services for your Django project running on Heroku:
-
-```python
-import herokuify
-
-from herokuify.common import *              # Common settings, SSL proxy header
-from herokuify.aws import *                 # AWS access keys as configured in env
-from herokuify.mail.mailgun import *        # Email settings for Mailgun add-on
-
-DATABASES = herokuify.get_db_config()       # Database config
-CACHES = herokuify.get_cache_config()       # Cache config for Memcache/MemCachier
-```
-
-See the [project page](https://github.com/nigma/django-herokuify) for more information.
-
-All in one
-----------
-
-[Django Modern Template](https://github.com/nigma/django-modern-template) is a project
-template for easy bootstrapping a Django project that can be deployed on Heroku.
-
-Clean virtualenv
-----------------
-
-Heroku caches Python virtual environment and all installed packages between
-project deploys.
-
-Since the ``CLEAN_VIRTUALENV`` flag has been removed from the buildpack,
-currently the only way to clean app cache is by
-[changing the runtime](https://devcenter.heroku.com/articles/python-runtimes#changing-runtimes).
